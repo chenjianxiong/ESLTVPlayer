@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Background -->
+    <path
+        android:fillColor="@color/primary"
+        android:pathData="M0,0h320v180h-320z"/>
+
+    <!-- Play icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,50 L60,130 L140,90 Z"/>
+
+    <!-- Text "XiaoMi Video Player" -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M170,70 h10 v60 h-10 z
+                         M190,70 h30 v10 h-30 z
+                         M190,120 h30 v10 h-30 z
+                         M220,70 h10 v60 h-10 z"/>
+</vector>
