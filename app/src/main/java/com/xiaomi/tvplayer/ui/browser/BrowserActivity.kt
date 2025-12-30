@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
@@ -39,7 +40,8 @@ class BrowserActivity : AppCompatActivity() {
     private lateinit var settingsManager: SettingsManager
     private lateinit var fileAdapter: FileAdapter
 
-    private var currentPath: String = "/sdcard/"
+    private lateinit var rootPath: String
+    private var currentPath: String = ""
 
     companion object {
         private const val REQUEST_STORAGE_PERMISSION = 1
@@ -51,10 +53,13 @@ class BrowserActivity : AppCompatActivity() {
         try {
             setContentView(R.layout.activity_browser)
 
+            // Define logical root (usually /storage/emulated/0)
+            rootPath = Environment.getExternalStorageDirectory().absolutePath
+            
             initializeViews()
             initializeManagers()
             checkPermissions()
-            Log.d(TAG, "onCreate finished successfully")
+            Log.d(TAG, "onCreate finished successfully. Root: $rootPath")
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreate: ${e.message}", e)
             Toast.makeText(this, "Error starting app: ${e.message}", Toast.LENGTH_LONG).show()
@@ -90,9 +95,20 @@ class BrowserActivity : AppCompatActivity() {
         )
         rvFiles.adapter = fileAdapter
 
-        // Restore last directory or use default
-        currentPath = settingsManager.getLastDirectory()
+        // Restore last directory or use root
+        val savedPath = settingsManager.getLastDirectory()
+        currentPath = if (isValidPath(savedPath)) savedPath else rootPath
         Log.d(TAG, "Initial path set to: $currentPath")
+    }
+
+    private fun isValidPath(path: String): Boolean {
+        if (path.isEmpty()) return false
+        val file = File(path)
+        return file.exists() && file.isDirectory && path.startsWith(rootPath)
+    }
+
+    private fun isAtRoot(): Boolean {
+        return currentPath == rootPath || currentPath == "$rootPath/"
     }
 
     private fun checkPermissions() {
@@ -132,9 +148,13 @@ class BrowserActivity : AppCompatActivity() {
     private fun loadFiles() {
         Log.d(TAG, "Loading files from: $currentPath")
         try {
+            // Safety check: ensure we never browse above root
+            if (!currentPath.startsWith(rootPath)) {
+                currentPath = rootPath
+            }
+
             val settings = settingsManager.getAppSettings()
             val filterString = settings.directoryFilter.trim()
-            // Split by space instead of comma
             val filters = if (filterString.isNotEmpty()) {
                 filterString.split("\\s+".toRegex()).map { it.lowercase() }.filter { it.isNotEmpty() }
             } else {
@@ -143,17 +163,18 @@ class BrowserActivity : AppCompatActivity() {
 
             val fileList = mutableListOf<VideoFile>()
             
-            // Add "Back to Parent" option if not at root
-            val currentFile = File(currentPath)
-            val parentFile = currentFile.parentFile
-            if (parentFile != null && currentPath != "/" && currentPath != "/storage/emulated/0" && currentPath != "/sdcard") {
-                fileList.add(VideoFile(
-                    path = parentFile.absolutePath,
-                    name = ".. [Go Back]",
-                    size = 0,
-                    lastModified = 0,
-                    isDirectory = true
-                ))
+            // Add "Back to Parent" option if NOT at root
+            if (!isAtRoot()) {
+                val parentFile = File(currentPath).parentFile
+                if (parentFile != null) {
+                    fileList.add(VideoFile(
+                        path = parentFile.absolutePath,
+                        name = ".. [Go Back]",
+                        size = 0,
+                        lastModified = 0,
+                        isDirectory = true
+                    ))
+                }
             }
 
             val allFiles = fileManager.getFilesInDirectory(currentPath)
@@ -164,10 +185,8 @@ class BrowserActivity : AppCompatActivity() {
             } else {
                 allFiles.filter { file ->
                     if (file.isDirectory) {
-                        // Check if directory name matches any filter
                         filters.any { filter -> file.name.lowercase().contains(filter) }
                     } else {
-                        // Always show video files
                         true
                     }
                 }
@@ -188,7 +207,7 @@ class BrowserActivity : AppCompatActivity() {
 
             tvCurrentPath.text = currentPath
 
-            // Save last directory
+            // Save current directory
             settingsManager.saveLastDirectory(currentPath)
         } catch (e: Exception) {
             Log.e(TAG, "Error loading files: ${e.message}", e)
@@ -222,14 +241,18 @@ class BrowserActivity : AppCompatActivity() {
         Log.d(TAG, "onKeyDown: $keyCode")
         return when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
-                val currentFile = File(currentPath)
-                val parentFile = currentFile.parentFile
-                
-                // If we can go up, go up. Otherwise, exit the app.
-                if (parentFile != null && currentPath != "/" && currentPath != "/storage/emulated/0" && currentPath != "/sdcard") {
-                    currentPath = parentFile.absolutePath
-                    loadFiles()
-                    true
+                if (!isAtRoot()) {
+                    val parentFile = File(currentPath).parentFile
+                    if (parentFile != null && parentFile.absolutePath.startsWith(rootPath)) {
+                        currentPath = parentFile.absolutePath
+                        loadFiles()
+                        true
+                    } else {
+                        // Fallback to root if parent is invalid but we aren't at root
+                        currentPath = rootPath
+                        loadFiles()
+                        true
+                    }
                 } else {
                     Log.d(TAG, "Exiting app via Back")
                     super.onKeyDown(keyCode, event)

@@ -6,9 +6,9 @@
 XiaoMi TV Video Player
 
 ### 1.2 Target Platform
-- **Device**: XiaoMi TV
+- **Device**: XiaoMi TV (65-inch 4K optimized)
 - **Architecture**: ARM64 (Cortex A55 focus)
-- **Operating System**: MiTV OS 2.9.6+ (Android 9.0 - 11.0+)
+- **Operating System**: MiTV OS 2.9.6+ (Android 9.0 - 14.0+)
 - **Input**: Remote Control (D-pad navigation focus)
 
 ### 1.3 Purpose
@@ -22,7 +22,7 @@ A lightweight, feature-rich video player optimized for XiaoMi TV with custom nav
 - **Minimum**: Cortex A55 4-core processor
 - **RAM**: 1GB minimum
 - **Storage**: 50MB for application installation
-- **Display**: 720p minimum, 1080p/4K recommended
+- **Display**: 720p minimum, 1080p/4K recommended (UI optimized for 1920x1080 logical canvas)
 - **Touchscreen**: Not required (`android.hardware.touchscreen` set to false)
 
 ### 2.2 Software Requirements
@@ -32,35 +32,24 @@ A lightweight, feature-rich video player optimized for XiaoMi TV with custom nav
 - **Target SDK**: 34
 - **Development Environment**: Android Studio with Android TV SDK
 - **Gradle Version**: 8.2+
-- **JDK Version**: 21 (Recommended)
+- **JDK Version**: 21
 
 ### 2.3 Technology Stack
-- **Language**: Kotlin/Java
-- **Media Framework**: ExoPlayer 2.x or MediaPlayer API
-- **UI Framework**: Android TV Leanback Library
-- **Build System**: Gradle
-- **Storage**: SharedPreferences for settings, SQLite for playback history
+- **Language**: Kotlin
+- **Media Framework**: ExoPlayer 2.18.1 (`StyledPlayerView`)
+- **UI Framework**: Android TV Leanback Library / AppCompat
+- **Build System**: Gradle with PowerShell automation (`build.ps1`)
+- **Storage**: SharedPreferences for settings, SQLite (Room) for playback history
 
 ---
 
 ## 3. Feature Specifications
 
 ### 3.1 Video Format Support
-
-#### 3.1.1 Initial Support
-- **MP4** (H.264/H.265 codec)
-- **MKV** (Matroska container)
-
-#### 3.1.2 Future Extensions
-- AVI
-- MOV
-- WebM
-- FLV
-
-#### 3.1.3 Codec Support
-- Video: H.264, H.265/HEVC, MPEG-4
-- Audio: AAC, MP3, AC3, DTS
-- Subtitles: SRT, ASS, SSA (embedded and external)
+- **Initial Support**: MP4 (H.264/H.265), MKV (Matroska)
+- **Extended Support**: AVI, MOV, WebM, FLV
+- **Codec Support**: H.264, H.265/HEVC, MPEG-4, AAC, MP3, AC3, DTS
+- **Subtitles**: SRT, ASS, SSA
 
 ---
 
@@ -68,240 +57,112 @@ A lightweight, feature-rich video player optimized for XiaoMi TV with custom nav
 
 #### 3.2.1 Remote Control Mapping
 
-| Button | Action | Default Value | Configurable |
-|--------|--------|---------------|--------------|
-| **Left** | Seek backward | 5 seconds | Yes |
-| **Right** | Seek forward | 5 seconds | Yes |
-| **Up** | Show overlay | N/A | No |
-| **Down** | Hide overlay | N/A | No |
-| **Center/OK** | Play/Pause | N/A | No |
-| **Home** | Exit player (save position) | N/A | No |
-| **Back/Return** | Exit player (save position) | N/A | No |
-| **Menu** | Open settings | N/A | No |
+| Button | Action | Implementation Detail |
+|--------|--------|-----------------------|
+| **Left** | Seek backward | Configurable (Default 5s), Debounced, Repeat-blocked |
+| **Right** | Seek forward | Configurable (Default 5s), Debounced, Repeat-blocked |
+| **Up** | Show overlay | Direct visibility toggle |
+| **Down** | Hide overlay | Direct visibility toggle |
+| **Center/OK** | Play/Pause | Toggle playback state |
+| **Back/Return** | Exit / Go Back | Saves position, exits current screen |
+| **Menu** | Open settings | Accessible from Browser and Player |
 
 #### 3.2.2 Seek Functionality
-- **Default Values**: 5 seconds backward/forward
-- **Configurable Range**: 1-60 seconds
-- **Implementation**: Frame-accurate seeking when possible
-- **UI Feedback**: Toast or on-screen display showing seek amount
+- **Implementation**: Intercepted via `dispatchKeyEvent` to prevent double-seeks and hardware repeat issues.
+- **UI Feedback**: Minimalist design; intrusive toast notifications removed for cleaner experience.
+- **Power Management**: `FLAG_KEEP_SCREEN_ON` active during playback to disable screensaver.
 
 ---
 
 ### 3.3 Overlay Feature
 
-#### 3.3.1 Overlay Properties
-All properties configurable via Settings GUI:
-
-| Property | Default Value | Range/Options |
-|----------|---------------|---------------|
-| **Color** | Red (#FF0000) | RGB color picker |
-| **Width** | 200px | 50-800px |
-| **Height** | 100px | 50-600px |
-| **Position X** | Center | 0 - screen width |
-| **Position Y** | Center | 0 - screen height |
-| **Opacity** | 80% | 0-100% |
+#### 3.3.1 Overlay Properties (4K Default)
+| Property | Default Value | Unit/Adjustment |
+|----------|---------------|-----------------|
+| **Color** | Black (#000000) | Cycle through presets |
+| **Width** | 1400 | Pixels (10px increments) |
+| **Height** | 55 | Pixels (5px increments) |
+| **Position X** | 380 | Pixels (10px increments) |
+| **Position Y** | 940 | Pixels (10px increments) |
+| **Opacity** | 100% | Opaque (10% increments) |
 
 #### 3.3.2 Overlay Behavior
-- Toggle visibility with Up (show) and Down (hide) buttons
-- Remains visible across seeks and pauses
-- Saved state: Hidden by default on playback start
-- Optional: Allow multiple overlays (future enhancement)
-
-#### 3.3.3 Use Cases
-- Testing display regions
-- Marking areas of interest
-- Developer/debugging purposes
+- Persistent across seeks and pauses.
+- Visibility controlled by Up/Down D-pad buttons.
+- State saved automatically.
 
 ---
 
 ### 3.4 File Browser
 
 #### 3.4.1 Storage Locations
-- **Internal Storage**: Always use `Environment.getExternalStorageDirectory()` to target `/storage/emulated/0/` for user visibility.
-- **External Storage**: USB drives mounted at `/mnt/`, `/storage/`
-- **Automatic Detection**: Monitor for USB mount/unmount events
+- **Internal Storage**: Targeted via `Environment.getExternalStorageDirectory()`.
+- **Navigation**: Support for hierarchical browsing with ".. [Go Back]" items and hardware Back button navigation.
 
 #### 3.4.2 Storage Access (Android 11+)
-For full file access:
-1. Include `MANAGE_EXTERNAL_STORAGE` permission in manifest.
-2. Check `Environment.isExternalStorageManager()`.
-3. If false, redirect user to `Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION`.
+- Mandatory `MANAGE_EXTERNAL_STORAGE` permission check.
+- Automatic redirection to system settings for "All files access" authorization.
 
 #### 3.4.3 Browser Features
-- Display folders and video files only (filter by extension)
-- Navigate up/down through directory tree
-- Show file metadata:
-  - File name
-  - File size
-  - Duration (if available)
-  - Last modified date
-- Sort options: Name, Date, Size
-- Remember last browsed directory
-
-#### 3.4.4 Supported File Extensions Filter
-```
-.mp4, .mkv, .avi, .mov, .webm, .flv
-```
-
-#### 3.4.5 UI Layout
-- Grid or List view (user preference)
-- Folder icon vs. video icon differentiation
-- Breadcrumb navigation showing current path
-- Fast scrolling with letter jumper (A-Z)
+- **Directory Filter**: Support for space-separated multiple search terms (e.g., "tftp download") to list specific folders.
+- **Visual Feedback**: Focused items (Folders/Files/Settings Button) highlighted in **Blue** with a white border for high visibility on large screens.
 
 ---
 
-### 3.5 Resume Playback
+### 3.5 Settings GUI
 
-#### 3.5.1 Position Tracking
-- Save playback position every 5 seconds
-- Save on exit (Home/Back button)
-- Store in local database (SQLite)
+#### 3.5.1 Categories
+- **Playback**: Precise seek timing adjustment (1-60s).
+- **Overlay**: Full coordinate and dimension control with precise increments.
+- **Directory Filter**: Text input for folder filtering.
+- **Display**: Toggle file size and duration visibility.
 
-#### 3.5.2 Database Schema
-```sql
-CREATE TABLE playback_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    file_path TEXT UNIQUE NOT NULL,
-    position_ms INTEGER NOT NULL,
-    duration_ms INTEGER,
-    last_played TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-#### 3.5.3 Resume Behavior
-- On file selection, check database for previous position
-- If position exists and > 5 seconds, show resume dialog:
-  - "Resume from [MM:SS]" (default selected)
-  - "Play from beginning"
-- Auto-select resume after 10 seconds
-- Clear position after video ends (>=95% watched)
+#### 3.5.2 State Management
+- **Auto-Save**: All settings are saved automatically when pressing the **Back** button.
+- **Quick Confirmation**: 800ms transient toast confirm.
+- **TV Optimized**: High-contrast blue focus states for all interactive elements.
 
 ---
 
-### 3.6 Settings GUI
+## 4. Technical Architecture & Configuration
 
-#### 3.6.1 Settings Categories
+### 4.1 Build System (`build.ps1`)
+Comprehensive PowerShell automation for Windows 10:
+1. Clean Project
+2. Build Debug (with strict error detection)
+3. Build Release
+4. Both
+5. Install to TV (via ADB connection to 192.168.1.146)
+6. Clear TV Logs
+7. View TV Logs (Filtered for BrowserActivity)
 
-**A. Playback Settings**
-- Seek backward time (1-60 seconds)
-- Seek forward time (1-60 seconds)
-- Auto-play next video (future)
-- Subtitle settings (future)
+### 4.2 Manifest Configuration
+- **Launcher**: Dual registration for standard `LAUNCHER` and TV-specific `LEANBACK_LAUNCHER`.
+- **Hardware**: `leanback` required, `touchscreen` false.
+- **Permissions**: `MANAGE_EXTERNAL_STORAGE`, `WAKE_LOCK`.
+- **Storage**: `android:requestLegacyExternalStorage="true"`.
 
-**B. Overlay Settings**
-- Enable/Disable overlay feature
-- Color picker (RGB/HEX)
-- Width (50-800px)
-- Height (50-600px)
-- Position X (0-screen width)
-- Position Y (0-screen height)
-- Opacity (0-100%)
-- Preview overlay
-
-**C. Display Settings**
-- File browser view mode (Grid/List)
-- Show file size
-- Show duration
-- Sort preference
-
-**D. Storage Settings**
-- Default starting directory
-- Scan external storage on launch
-- Refresh storage locations
-
-**E. About**
-- App version
-- Supported formats
-- License information
-
-#### 3.6.2 Settings Access
-- Press Menu button during playback or in browser
-- Dedicated settings icon in main browser screen
-
-#### 3.6.3 Settings Storage
-- Use SharedPreferences for all settings
-- JSON format for complex settings (overlay config)
-- Export/Import settings (future enhancement)
+### 4.3 Theme & Compatibility
+- **Theme**: Inherits from `Theme.AppCompat.NoActionBar` to support `AppCompatActivity` while maintaining lean TV UI.
+- **ExoPlayer**: Migrated to `StyledPlayerView` for modern component support.
 
 ---
 
-### 3.7 Exit & State Management
+## 5. Development Status
 
-#### 3.7.1 Exit Triggers
-- **Home button press**: Handle `KEYCODE_HOME` specifically to ensure clean exit.
-- **Back/Return button press**: Handle `KEYCODE_BACK`. From playback screen, exit to browser; from browser root, exit app.
+### Phase 1: Core Functionality & Xiaomi TV Optimization (COMPLETED)
+- [x] Set up Android TV project (Min 28, Target 34).
+- [x] Configure Manifest with dual launchers and hardware features.
+- [x] Implement storage permission logic for Android 11+ (Manage External Storage).
+- [x] Implement file browser with hierarchical navigation and Blue focus highlights.
+- [x] Integrate modern ExoPlayer (`StyledPlayerView`).
+- [x] Implement precision seek control and screensaver management.
+- [x] Develop comprehensive Settings GUI with auto-save and 4K-optimized overlay defaults.
+- [x] Implement space-separated directory filtering.
+- [x] Create PowerShell build and deployment automation.
 
-#### 3.7.2 State Saving & Cleanup
-On exit:
-1. Save current playback position to database.
-2. Save last browsed directory.
-3. Save overlay state (visible/hidden).
-4. **Clean Exit**: Stop any background services (e.g., file scanning) before finishing.
-5. Release media player resources.
-6. Clean up temporary files.
-
-#### 3.7.3 Lifecycle Management
-- Handle TV sleep/wake events.
-- Manage audio focus.
-- **Foreground Services**: Use foreground services with persistent notifications for long-running operations (like library scanning) to prevent system termination.
-
----
-
-## 4. User Interface Design
-
-### 4.1 Screen Structure
-(See original spec for layout diagrams)
-
-### 4.2 UI Guidelines
-- Follow Android TV design guidelines.
-- Use Leanback Library components.
-- **Typography**: 
-  - Title: 48sp
-  - Headers: 36sp
-  - Body: 28sp
-- Ensure 10-foot UI readability.
-- High contrast for text and icons.
-- **Navigation**: All interactive elements must have clear focus states for D-pad navigation.
-- Smooth animations (60fps target).
-
----
-
-## 5. Technical Architecture & Configuration
-
-### 5.1 Application Architecture
-(See original spec for architecture diagram)
-
-### 5.2 Manifest Configuration
-To ensure maximum visibility and functionality on Xiaomi TV:
-- **Launcher Categories**: Include both `android.intent.category.LAUNCHER` and `android.intent.category.LEANBACK_LAUNCHER`.
-- **Hardware Requirements**: 
-  - `android.hardware.touchscreen` required="false"
-  - `android.software.leanback` required="true"
-- **Permissions**: `MANAGE_EXTERNAL_STORAGE` for Android 11+.
-- **Legacy Storage**: `android:requestLegacyExternalStorage="true"`.
-
-### 5.3 Theme & Compatibility
-- **Theme**: Must inherit from `Theme.AppCompat` (e.g., `Theme.AppCompat.NoActionBar`) to avoid `IllegalStateException` when using `AppCompatActivity`.
-- **Error Handling**: Use `try-catch` in `onCreate` to catch initialization errors common on TV hardware.
-
-### 5.4 Key Components
-(See original spec for details on Media Player, File Manager, etc.)
-
----
-
-## 6. Data Models
-(See original spec for data model definitions)
-
----
-
-## 7. Development Phases
-
-### Phase 1: Core Functionality & Configuration (Week 1-2)
-- [ ] Set up Android TV project with correct SDKs (Min 28, Target 34).
-- [ ] Configure Manifest with dual launchers and hardware features.
-- [ ] Implement storage permission logic for Android 11+.
-- [ ] Implement basic file browser using `Environment.getExternalStorageDirectory()`.
-- [ ] Integrate ExoPlayer.
-
-(Subsequent phases follow original spec...)
+### Phase 2: Refinement (Next Steps)
+- [ ] Multiple overlay support.
+- [ ] Advanced subtitle settings.
+- [ ] Library scanning background service.
+- [ ] Network storage support (SMB/FTP).
