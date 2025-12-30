@@ -5,8 +5,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
-import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -16,8 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.xiaomi.tvplayer.R
+import com.xiaomi.tvplayer.data.model.AppSettings
 import com.xiaomi.tvplayer.manager.FileManager
 import com.xiaomi.tvplayer.manager.OverlayManager
 import com.xiaomi.tvplayer.manager.PlaybackManager
@@ -29,7 +31,8 @@ import kotlinx.coroutines.launch
  */
 class PlayerActivity : AppCompatActivity() {
 
-    private lateinit var playerView: PlayerView
+    private val TAG = "PlayerActivity"
+    private lateinit var playerView: StyledPlayerView
     private lateinit var playerContainer: FrameLayout
 
     private var player: ExoPlayer? = null
@@ -37,9 +40,14 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playbackManager: PlaybackManager
     private lateinit var overlayManager: OverlayManager
     private lateinit var fileManager: FileManager
+    
+    private var appSettings: AppSettings? = null
 
     private var filePath: String = ""
     private var savedPosition: Long = 0
+    
+    private var lastSeekTime: Long = 0
+    private val SEEK_DEBOUNCE_MS = 500L // Prevent accidental double-seeks within 0.5s
 
     private val positionSaveHandler = Handler(Looper.getMainLooper())
     private val positionSaveRunnable = object : Runnable {
@@ -52,6 +60,9 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
+
+        // Disable screen saver while playing video
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         initializeViews()
         initializeManagers()
@@ -76,16 +87,18 @@ class PlayerActivity : AppCompatActivity() {
         playbackManager = PlaybackManager(this)
         overlayManager = OverlayManager(this)
         fileManager = FileManager()
+        
+        // Cache settings and log the values to debug huge jumps
+        appSettings = settingsManager.getAppSettings()
+        Log.d(TAG, "Initialized with SeekBack: ${appSettings?.seekBackwardSeconds}s, SeekForward: ${appSettings?.seekForwardSeconds}s")
     }
 
     private fun checkResumePosition() {
         lifecycleScope.launch {
             val record = playbackManager.getPlaybackPosition(filePath)
             if (record != null && record.positionMs > 5000) {
-                // Show resume dialog
                 showResumeDialog(record.positionMs)
             } else {
-                // Start playback from beginning
                 initializePlayer(0)
             }
         }
@@ -118,7 +131,6 @@ class PlayerActivity : AppCompatActivity() {
 
         dialog.show()
 
-        // Auto-select resume after 10 seconds
         Handler(Looper.getMainLooper()).postDelayed({
             if (dialog.isShowing) {
                 dialog.dismiss()
@@ -138,17 +150,13 @@ class PlayerActivity : AppCompatActivity() {
         player?.playWhenReady = true
 
         savedPosition = startPosition
-
-        // Start position saving
         positionSaveHandler.post(positionSaveRunnable)
 
-        // Initialize overlay
-        val overlayConfig = settingsManager.getOverlayConfig()
+        val overlayConfig = appSettings?.overlayConfig ?: settingsManager.getOverlayConfig()
         if (overlayConfig.enabled) {
             overlayManager.createOverlay(playerContainer, overlayConfig)
         }
 
-        // Add player listener
         player?.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_ENDED) {
@@ -183,69 +191,69 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        val settings = settingsManager.getAppSettings()
-
-        return when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                // Seek backward
-                val seekAmount = settings.seekBackwardSeconds * 1000L
-                player?.let {
-                    val newPos = (it.currentPosition - seekAmount).coerceAtLeast(0)
-                    it.seekTo(newPos)
-                    Toast.makeText(
-                        this,
-                        getString(R.string.seek_backward, settings.seekBackwardSeconds),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                // Seek forward
-                val seekAmount = settings.seekForwardSeconds * 1000L
-                player?.let {
-                    val newPos = (it.currentPosition + seekAmount).coerceAtMost(it.duration)
-                    it.seekTo(newPos)
-                    Toast.makeText(
-                        this,
-                        getString(R.string.seek_forward, settings.seekForwardSeconds),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                // Show overlay
-                overlayManager.showOverlay()
-                Toast.makeText(this, R.string.overlay_shown, Toast.LENGTH_SHORT).show()
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                // Hide overlay
-                overlayManager.hideOverlay()
-                Toast.makeText(this, R.string.overlay_hidden, Toast.LENGTH_SHORT).show()
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                // Play/Pause
-                player?.let {
-                    if (it.isPlaying) {
-                        it.pause()
-                    } else {
-                        it.play()
+    /**
+     * Using dispatchKeyEvent to intercept events before they reach the StyledPlayerView
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val keyCode = event.keyCode
+            
+            // Only handle the initial press (repeatCount 0)
+            if (event.repeatCount == 0) {
+                val now = System.currentTimeMillis()
+                val settings = appSettings ?: settingsManager.getAppSettings()
+                
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        if (now - lastSeekTime > SEEK_DEBOUNCE_MS) {
+                            lastSeekTime = now
+                            player?.let {
+                                val seekAmount = settings.seekBackwardSeconds * 1000L
+                                val newPos = (it.currentPosition - seekAmount).coerceAtLeast(0)
+                                Log.d(TAG, "Seek Back: ${it.currentPosition} -> $newPos (-${seekAmount}ms)")
+                                it.seekTo(newPos)
+                            }
+                            return true 
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        if (now - lastSeekTime > SEEK_DEBOUNCE_MS) {
+                            lastSeekTime = now
+                            player?.let {
+                                val seekAmount = settings.seekForwardSeconds * 1000L
+                                val newPos = (it.currentPosition + seekAmount).coerceAtMost(it.duration)
+                                Log.d(TAG, "Seek Forward: ${it.currentPosition} -> $newPos (+${seekAmount}ms)")
+                                it.seekTo(newPos)
+                            }
+                            return true
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        overlayManager.showOverlay()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        overlayManager.hideOverlay()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        player?.let {
+                            if (it.isPlaying) it.pause() else it.play()
+                        }
+                        return true
+                    }
+                    KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_HOME -> {
+                        saveCurrentPosition()
+                        finish()
+                        return true
                     }
                 }
-                true
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                // Consume repeat events
+                return true
             }
-            KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_HOME -> {
-                // Save position and exit
-                saveCurrentPosition()
-                finish()
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
         }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onPause() {
@@ -255,6 +263,9 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Clear keep screen on flag to restore screen saver behavior
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
         positionSaveHandler.removeCallbacks(positionSaveRunnable)
         saveCurrentPosition()
         player?.release()

@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
     android:focusable="true"
+    android:focusableInTouchMode="true"
     android:clickable="true"
-    app:cardBackgroundColor="#222222"
+    app:cardBackgroundColor="@color/item_focus_color"
     app:cardCornerRadius="8dp">
 
     <LinearLayout
@@ -14,7 +16,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:duplicateParentState="true">
 
         <!-- Icon -->
         <TextView
@@ -31,7 +34,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:duplicateParentState="true">
 
             <TextView
                 android:id="@+id/tvFileName"
@@ -47,7 +51,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="4dp">
+                android:layout_marginTop="4dp"
+                android:duplicateParentState="true">
 
                 <TextView
                     android:id="@+id/tvFileSize"

@@ -6,8 +6,8 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <!-- ExoPlayer View -->
-    <com.google.android.exoplayer2.ui.PlayerView
+    <!-- ExoPlayer View (Updated to non-deprecated StyledPlayerView) -->
+    <com.google.android.exoplayer2.ui.StyledPlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -51,7 +51,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:text="-"
-                android:focusable="true" />
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
             <TextView
                 android:id="@+id/tvSeekBackValue"
@@ -67,7 +68,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:text="+"
-                android:focusable="true" />
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
         </LinearLayout>
 
@@ -91,7 +93,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:text="-"
-                android:focusable="true" />
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
             <TextView
                 android:id="@+id/tvSeekForwardValue"
@@ -107,7 +110,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:text="+"
-                android:focusable="true" />
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
         </LinearLayout>
 
@@ -145,6 +149,93 @@
 
         </LinearLayout>
 
+        <!-- Overlay Position X -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/overlay_position_x"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnDecreasePosX"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="-"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+            <TextView
+                android:id="@+id/tvPosXValue"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:text="600" />
+
+            <Button
+                android:id="@+id/btnIncreasePosX"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="+"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+        </LinearLayout>
+
+        <!-- Overlay Position Y -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/overlay_position_y"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnDecreasePosY"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="-"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+            <TextView
+                android:id="@+id/tvPosYValue"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:text="900" />
+
+            <Button
+                android:id="@+id/btnIncreasePosY"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="+"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+        </LinearLayout>
+
+        <!-- Overlay Width -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -160,17 +251,34 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp" />
 
+            <Button
+                android:id="@+id/btnDecreaseWidth"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="-"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
             <TextView
-                android:id="@+id/tvOverlayWidth"
-                android:layout_width="80dp"
+                android:id="@+id/tvWidthValue"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
-                android:text="200px" />
+                android:text="200" />
+
+            <Button
+                android:id="@+id/btnIncreaseWidth"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="+"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
         </LinearLayout>
 
+        <!-- Overlay Height -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -186,17 +294,34 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp" />
 
+            <Button
+                android:id="@+id/btnDecreaseHeight"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="-"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
             <TextView
-                android:id="@+id/tvOverlayHeight"
-                android:layout_width="80dp"
+                android:id="@+id/tvHeightValue"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
-                android:text="100px" />
+                android:text="100" />
+
+            <Button
+                android:id="@+id/btnIncreaseHeight"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="+"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
 
         </LinearLayout>
 
+        <!-- Overlay Opacity -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -212,14 +337,85 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp" />
 
+            <Button
+                android:id="@+id/btnDecreaseOpacity"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="-"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
             <TextView
-                android:id="@+id/tvOverlayOpacity"
-                android:layout_width="80dp"
+                android:id="@+id/tvOpacityValue"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
-                android:text="80%" />
+                android:text="100%" />
+
+            <Button
+                android:id="@+id/btnIncreaseOpacity"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="+"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+        </LinearLayout>
+
+        <!-- Overlay Color -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/overlay_color"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnCycleColor"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Black"
+                android:focusable="true"
+                android:background="@drawable/button_background_selector" />
+
+        </LinearLayout>
+
+        <!-- Directory Filter -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Directory Filter"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/etDirectoryFilter"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:hint="Enter string..."
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/button_background_selector"
+                android:padding="8dp"
+                android:focusable="true" />
 
         </LinearLayout>
 
@@ -279,43 +475,6 @@
                 android:focusable="true" />
 
         </LinearLayout>
-
-        <!-- Save Button -->
-        <Button
-            android:id="@+id/btnSaveSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Save Settings"
-            android:focusable="true"
-            android:textSize="18sp" />
-
-        <!-- About -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/about"
-            android:textColor="@color/accent"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:paddingTop="24dp"
-            android:paddingBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="XiaoMi TV Video Player v1.0.0"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:paddingVertical="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Supported Formats: MP4, MKV, AVI, MOV, WebM, FLV"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:paddingVertical="4dp" />
 
     </LinearLayout>
 

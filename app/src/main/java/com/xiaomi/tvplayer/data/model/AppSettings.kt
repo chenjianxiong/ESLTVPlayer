@@ -19,5 +19,6 @@ data class AppSettings(
     val defaultDirectory: String = "/sdcard/",
     val showFileSize: Boolean = true,
     val showDuration: Boolean = true,
-    val scanExternalStorage: Boolean = true
+    val scanExternalStorage: Boolean = true,
+    val directoryFilter: String = "" // New filter for directory names
 )

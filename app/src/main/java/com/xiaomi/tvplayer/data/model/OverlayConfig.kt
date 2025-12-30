@@ -7,10 +7,10 @@ import android.graphics.Color
  */
 data class OverlayConfig(
     val enabled: Boolean = true,
-    val color: Int = Color.RED,
-    val width: Int = 200,
-    val height: Int = 100,
-    val positionX: Int = -1, // -1 for center
-    val positionY: Int = -1, // -1 for center
-    val opacity: Int = 80 // 0-100
+    val color: Int = Color.BLACK,
+    val width: Int = 1400, // New default width
+    val height: Int = 55,   // New default height
+    val positionX: Int = 380, // New default X
+    val positionY: Int = 940, // New default Y
+    val opacity: Int = 100
 )

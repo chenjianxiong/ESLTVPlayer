@@ -2,7 +2,6 @@ package com.xiaomi.tvplayer.manager
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.PixelFormat
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -29,14 +28,15 @@ class OverlayManager(private val context: Context) {
                 config.width,
                 config.height
             ).apply {
-                gravity = Gravity.CENTER
-
-                // Apply custom position if not centered
-                if (config.positionX >= 0) {
-                    leftMargin = config.positionX
-                }
-                if (config.positionY >= 0) {
-                    topMargin = config.positionY
+                // If position is -1, default to Bottom-Left
+                if (config.positionX == -1 && config.positionY == -1) {
+                    gravity = Gravity.BOTTOM or Gravity.START
+                    leftMargin = 50 // small margin from edge
+                    bottomMargin = 50
+                } else {
+                    gravity = Gravity.TOP or Gravity.START
+                    leftMargin = if (config.positionX >= 0) config.positionX else 0
+                    topMargin = if (config.positionY >= 0) config.positionY else 0
                 }
             }
 

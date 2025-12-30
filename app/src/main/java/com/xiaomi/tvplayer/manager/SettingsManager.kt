@@ -25,6 +25,7 @@ class SettingsManager(context: Context) {
         private const val KEY_SHOW_DURATION = "show_duration"
         private const val KEY_SCAN_EXTERNAL = "scan_external_storage"
         private const val KEY_LAST_DIRECTORY = "last_directory"
+        private const val KEY_DIRECTORY_FILTER = "directory_filter"
     }
 
     fun getAppSettings(): AppSettings {
@@ -45,7 +46,8 @@ class SettingsManager(context: Context) {
             defaultDirectory = prefs.getString(KEY_DEFAULT_DIR, "/sdcard/") ?: "/sdcard/",
             showFileSize = prefs.getBoolean(KEY_SHOW_FILE_SIZE, true),
             showDuration = prefs.getBoolean(KEY_SHOW_DURATION, true),
-            scanExternalStorage = prefs.getBoolean(KEY_SCAN_EXTERNAL, true)
+            scanExternalStorage = prefs.getBoolean(KEY_SCAN_EXTERNAL, true),
+            directoryFilter = prefs.getString(KEY_DIRECTORY_FILTER, "") ?: ""
         )
     }
 
@@ -59,6 +61,7 @@ class SettingsManager(context: Context) {
             putBoolean(KEY_SHOW_FILE_SIZE, settings.showFileSize)
             putBoolean(KEY_SHOW_DURATION, settings.showDuration)
             putBoolean(KEY_SCAN_EXTERNAL, settings.scanExternalStorage)
+            putString(KEY_DIRECTORY_FILTER, settings.directoryFilter)
             apply()
         }
     }

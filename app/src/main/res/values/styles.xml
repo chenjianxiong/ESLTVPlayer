@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base Leanback Theme -->
-    <style name="Theme.Leanback" parent="Theme.Leanback.Browse">
+    <!-- Base App Theme (AppCompat required for AppCompatActivity) -->
+    <style name="Theme.Leanback" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
+        
+        <!-- Leanback specific attributes can be added here if needed -->
+        <item name="browseRowsMarginTop">27dp</item>
+        <item name="browseRowsMarginStart">56dp</item>
     </style>
 
     <!-- Player Theme (Fullscreen) -->
